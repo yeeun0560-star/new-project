@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DX팀의 방탈출 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+body { background: #0a0a0f; color: #fff; }
+
+.screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; flex-direction: column; align-items: center; justify-content: center; padding: 24px; overflow-y: auto; }
+.screen.active { display: flex; }
+.btn { padding: 16px 44px; border: none; border-radius: 50px; font-size: 15px; font-weight: 700; cursor: pointer; transition: transform 0.15s; color: #fff; letter-spacing: 0.5px; }
+.btn:active { transform: scale(0.95); }
+.btn-primary { background: linear-gradient(135deg, #ff3c5f, #ff6b8a); box-shadow: 0 4px 24px rgba(255,60,95,0.4); }
+.btn-secondary { background: linear-gradient(135deg, #1e3a5f, #4a2d8a); box-shadow: 0 4px 24px rgba(74,45,138,0.3); }
+.btn-success { background: linear-gradient(135deg, #00b894, #00cec9); box-shadow: 0 4px 24px rgba(0,184,148,0.3); }
+.fade-in { animation: fadeIn 1s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes flicker { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 5px #e94560; } 50% { box-shadow: 0 0 20px #e94560; } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes glow { 0%,100% { text-shadow: 0 0 5px #ffd700; } 50% { text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- 타이틀 -->
+<div id="screen-title" class="screen active">
+  <div style="text-align:center;" class="fade-in">
+    <div style="font-size:60px; margin-bottom:20px; animation: float 3s ease-in-out infinite;">🖥️</div>
+    <h1 style="font-size:32px; margin-bottom:12px; animation: glow 2s ease-in-out infinite;">DX팀의 방탈출 게임</h1>
+    <p style="font-size:13px; color:rgba(255,255,255,0.4); margin-bottom:40px;">금요일 밤, 장애가 터졌다. 당신은 혼자 남겨졌다...</p>
+    <button class="btn btn-primary" onclick="showScreen('screen-character')">시작하기</button>
+  </div>
+</div>
+
+<!-- 닉네임 + 캐릭터 선택 -->
+<div id="screen-character" class="screen">
+  <div id="nickname-section" style="text-align:center; max-width:400px; width:100%;">
+    <h2 style="margin-bottom:8px; font-size:22px;">닉네임을 입력하세요</h2>
+    <p style="font-size:13px; color:rgba(255,255,255,0.6); margin-bottom:20px;">랭킹에 등록될 이름입니다</p>
+    <input type="text" id="nickname-input" maxlength="10" placeholder="닉네임 (최대 10자)" style="width:100%;padding:14px;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-size:16px;text-align:center;outline:none;margin-bottom:16px;" onfocus="this.style.borderColor='#ffd700'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'">
+    <button class="btn btn-primary" onclick="confirmNickname()">확인</button>
+  </div>
+  <div id="charselect-section" style="text-align:center; max-width:400px; width:100%; display:none;">
+    <h2 style="margin-bottom:8px; font-size:22px;">캐릭터를 선택하세요</h2>
+    <p style="font-size:13px; color:rgba(255,255,255,0.6); margin-bottom:20px;">선택한 캐릭터에 따라 스토리와 엔딩이 달라집니다</p>
+    <div id="char-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%;"></div>
+  </div>
+</div>
+
+<!-- 인트로 -->
+<div id="screen-intro" class="screen" style="background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.7)),url('images/갇힌 사진.jpg') center/cover;">
+  <div style="text-align:center; max-width:500px;">
+    <p id="intro-text" style="font-size:16px; line-height:2; color:rgba(255,255,255,0.9);"></p>
+    <button class="btn btn-secondary" id="btn-start-room1" style="margin-top:30px; display:none;" onclick="startRoom1()">6 회의실로 이동</button>
+  </div>
+</div>
+
+<!-- 방 1: 6 회의실 -->
+<div id="screen-room1" class="screen" style="background:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.5)),url('images/6회의실.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
+  <div style="text-align:center; width:100%; max-width:500px;">
+    <h2 style="margin-bottom:4px;">📍 6 회의실</h2>
+    <p style="font-size:12px; color:#ffd700; margin-bottom:16px;" id="room1-status">퍼즐 1/2: 나이 순서 맞추기</p>
+    <div id="room1-puzzle1" style="width:100%;"></div>
+    <div id="room1-puzzle2" style="width:100%; display:none;"></div>
+  </div>
+</div>
+
+<!-- 방 2: 장교빌딩 서버실 -->
+<div id="screen-room2" class="screen" style="background:linear-gradient(rgba(20,0,0,0.45),rgba(10,0,0,0.55)),url('images/장교빌딩.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
+  <div style="text-align:center; width:100%; max-width:500px;">
+    <h2 style="margin-bottom:4px;">📍 장교빌딩 서버실</h2>
+    <p style="font-size:12px; color:#e94560; margin-bottom:16px; animation:pulse 2s infinite;" id="room2-status">⚠️ 시스템 장애 발생</p>
+    <div id="room2-puzzle1" style="width:100%;"></div>
+    <div id="room2-puzzle2" style="width:100%; display:none;"></div>
+  </div>
+</div>
+
+<!-- 방 3: 롯데백화점 본점 -->
+<div id="screen-room3" class="screen" style="background:linear-gradient(rgba(0,0,30,0.35),rgba(0,0,20,0.45)),url('images/롯데백화점.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
+  <div style="text-align:center; width:100%; max-width:500px;">
+    <h2 style="margin-bottom:4px;">📍 롯데백화점 본점</h2>
+    <p style="font-size:12px; color:#4ecdc4; margin-bottom:16px;" id="room3-status">최종 인증 퀴즈</p>
+    <div id="room3-quiz" style="width:100%;"></div>
+  </div>
+</div>
+
+<!-- 엔딩 -->
+<div id="screen-ending" class="screen" style="background:linear-gradient(135deg,#0f3460,#1a1a2e,#16213e);">
+  <div style="text-align:center; max-width:500px;" id="ending-content"></div>
+</div>
+
+</div>
+
+<script>
+// ========================================
+// 게임 상태
+// ========================================
+var gameState = {
+  character: null,
+  nickname: '',
+  startTime: null,
+  room1Clear: false,
+  room2Clear: false,
+  room3Clear: false
+};
+
+var characters = [
+  { id:'hong', name:'홍병우', title:'팀장', trait:'"내몸혁명" 다이어트 리더', img:'images/홍병우.jpg', color:'#e94560' },
+  { id:'park', name:'박종택', title:'책임', trait:'"내몸혁명" 파트너, 끈기의 아이콘', img:'images/박종택.jpg', color:'#ffd700' },
+  { id:'lee', name:'이상현', title:'책임', trait:'통화왕, 소통의 달인', img:'images/이상현.jpg', color:'#00cec9' },
+  { id:'jeon', name:'전세웅', title:'책임', trait:'더스틴에 고통받는 기획자', img:'images/전세웅.jpg', color:'#a29bfe' }
+];
+
+// ========================================
+// 랭킹 시스템 (localStorage)
+// ========================================
+function getRankings() {
+  try { return JSON.parse(localStorage.getItem('dx_escape_rankings') || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveRanking(nickname, character, timeSeconds) {
+  var rankings = getRankings();
+  rankings.push({ nickname: nickname, character: character, time: timeSeconds, date: new Date().toLocaleDateString('ko-KR') });
+  rankings.sort(function(a, b) { return a.time - b.time; });
+  if (rankings.length > 50) rankings = rankings.slice(0, 50);
+  localStorage.setItem('dx_escape_rankings', JSON.stringify(rankings));
+  return rankings;
+}
+
+// ========================================
+// 화면 전환 & 닉네임
+// ========================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function confirmNickname() {
+  var input = document.getElementById('nickname-input');
+  var name = input.value.trim();
+  if (!name) { input.style.borderColor = '#e94560'; input.placeholder = '닉네임을 입력해주세요!'; return; }
+  gameState.nickname = name;
+  document.getElementById('nickname-section').style.display = 'none';
+  document.getElementById('charselect-section').style.display = 'block';
+}
+
+// ========================================
+// 캐릭터 선택
+// ========================================
+(function initCharSelect() {
+  var grid = document.getElementById('char-grid');
+  characters.forEach(function(c) {
+    var card = document.createElement('div');
+    card.style.cssText = 'background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.3s;text-align:center;';
+    card.innerHTML =
+      '<div style="width:70px;height:70px;border-radius:50%;margin:0 auto 10px;overflow:hidden;border:3px solid '+c.color+';">' +
+        '<img src="'+c.img+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'<div style=padding:18px;font-size:24px;background:'+c.color+'>'+c.name[0]+'</div>\'">' +
+      '</div>' +
+      '<div style="font-size:15px;font-weight:bold;">'+c.name+'</div>' +
+      '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin:2px 0;">'+c.title+'</div>' +
+      '<div style="font-size:11px;color:'+c.color+';margin-top:6px;">'+c.trait+'</div>';
+    card.onmouseenter = function() { card.style.borderColor = c.color; card.style.transform = 'scale(1.03)'; };
+    card.onmouseleave = function() { card.style.borderColor = 'rgba(255,255,255,0.1)'; card.style.transform = 'scale(1)'; };
+    card.onclick = function() { selectCharacter(c); };
+    grid.appendChild(card);
+  });
+})();
+
+function selectCharacter(c) {
+  gameState.character = c;
+  gameState.startTime = Date.now();
+  showScreen('screen-intro');
+  playIntro();
+}
+
+// ========================================
+// 인트로 (캐릭터별 스토리)
+// ========================================
+function playIntro() {
+  var stories = {
+    hong: [
+      '금요일 저녁 7시.','',
+      '홍병우 팀장은 내몸혁명 식단을 체크하며','6 회의실에서 혼자 야근 중이었다.','',
+      '"오늘은 닭가슴살 대신 코드 리뷰를..."','',
+      '갑자기 — 정전.','',
+      '형광등이 깜빡이더니 모든 것이 어둠에 잠겼다.','문을 당겨본다. 잠겨있다.','',
+      '"팀장으로서 이 정도는 해결해야지."','',
+      '책상 위 모니터에 희미한 불빛 하나.','"퍼즐을 풀어야 나갈 수 있습니다."'
+    ],
+    park: [
+      '금요일 저녁 7시.','',
+      '박종택 책임은 내몸혁명 운동 기록을 정리하며','6 회의실에서 혼자 남아있었다.','',
+      '"오늘 스쿼트 100개 완료... 이제 퇴근만..."','',
+      '갑자기 — 정전.','',
+      '형광등이 깜빡이더니 모든 것이 어둠에 잠겼다.','문을 당겨본다. 잠겨있다.','',
+      '"포기란 없다. 내몸혁명처럼."','',
+      '책상 위 모니터에 희미한 불빛 하나.','"퍼즐을 풀어야 나갈 수 있습니다."'
+    ],
+    lee: [
+      '금요일 저녁 7시.','',
+      '이상현 책임은 아직 통화 중이었다.','"아 네네, 그래서 제가 말씀드린 게..."','',
+      '갑자기 — 정전. 통화가 끊겼다.','',
+      '형광등이 깜빡이더니 모든 것이 어둠에 잠겼다.','문을 당겨본다. 잠겨있다.','',
+      '"어? 어?? 여보세요?? ...끊겼네."','',
+      '책상 위 모니터에 희미한 불빛 하나.','"퍼즐을 풀어야 나갈 수 있습니다."'
+    ],
+    jeon: [
+      '금요일 저녁 7시.','',
+      '전세웅 책임은 더스틴 빌드 에러와 싸우며','6 회의실에서 혼자 야근 중이었다.','',
+      '"이번엔 진짜 되겠지... 커밋 푸시..."','',
+      '갑자기 — 정전. 빌드도 멈췄다.','',
+      '형광등이 깜빡이더니 모든 것이 어둠에 잠겼다.','문을 당겨본다. 잠겨있다.','',
+      '"...더스틴보다 더한 게 있었네."','',
+      '책상 위 모니터에 희미한 불빛 하나.','"퍼즐을 풀어야 나갈 수 있습니다."'
+    ]
+  };
+
+  var lines = stories[gameState.character.id];
+  var el = document.getElementById('intro-text');
+  el.innerHTML = '';
+  var i = 0;
+  var interval = setInterval(function() {
+    if (i >= lines.length) {
+      clearInterval(interval);
+      document.getElementById('btn-start-room1').style.display = 'inline-block';
+      return;
+    }
+    el.innerHTML += (lines[i] === '' ? '<br>' : lines[i] + '<br>');
+    i++;
+  }, 400);
+}
+
+// ========================================
+// 방 1: 6 회의실
+// ========================================
+var room1Data = {
+  correctOrder: ['이성현','이정호','김하늘','박예은','정아름'],
+  currentOrder: []
+};
+
+function startRoom1() {
+  showScreen('screen-room1');
+  initRoom1Puzzle1();
+}
+
+function initRoom1Puzzle1() {
+  var container = document.getElementById('room1-puzzle1');
+  document.getElementById('room1-status').textContent = '퍼즐 1/2: 나이 순서 맞추기';
+  room1Data.currentOrder = [];
+
+  var names = ['정아름','김하늘','이정호','박예은','이성현'];
+  for (var i = names.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = names[i]; names[i] = names[j]; names[j] = t;
+  }
+
+  var html = '<p style="font-size:14px;margin-bottom:8px;font-weight:bold;">👶 나이가 어린 순서대로 클릭하세요!</p>';
+  html += '<p style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:16px;">가장 어린 사람부터 순서대로 선택하세요.</p>';
+  html += '<div id="age-buttons" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;">';
+  names.forEach(function(name) {
+    html += '<button class="age-btn" data-name="'+name+'" onclick="clickAge(\''+name+'\')" style="padding:14px 20px;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-size:15px;font-weight:bold;cursor:pointer;transition:all 0.2s;">'+name+'</button>';
+  });
+  html += '</div>';
+  html += '<div id="age-order" style="min-height:44px;padding:12px;background:rgba(255,255,255,0.05);border-radius:10px;margin-bottom:12px;font-size:14px;color:#ffd700;">선택 순서: </div>';
+  html += '<p id="age-error" style="font-size:12px;color:#e94560;display:none;margin-top:8px;"></p>';
+  container.innerHTML = html;
+}
+
+function clickAge(name) {
+  var idx = room1Data.currentOrder.indexOf(name);
+  if (idx !== -1) {
+    room1Data.currentOrder.splice(idx, 1);
+    var btn = document.querySelector('.age-btn[data-name="'+name+'"]');
+    if (btn) { btn.style.background = 'rgba(255,255,255,0.08)'; btn.style.borderColor = 'rgba(255,255,255,0.2)'; }
+    updateAgeOrder();
+    return;
+  }
+
+  room1Data.currentOrder.push(name);
+  var btn = document.querySelector('.age-btn[data-name="'+name+'"]');
+  if (btn) { btn.style.background = 'rgba(255,215,0,0.3)'; btn.style.borderColor = '#ffd700'; }
+  updateAgeOrder();
+
+  if (room1Data.currentOrder.length >= 5) {
+    var correct = room1Data.currentOrder.every(function(n, i) { return n === room1Data.correctOrder[i]; });
+    if (correct) {
+      document.getElementById('age-order').innerHTML = '<span style="color:#00b894;font-weight:bold;">✅ 정답! ' + room1Data.currentOrder.join(' → ') + '</span>';
+      setTimeout(showRoom1Puzzle2, 800);
+    } else {
+      room1Data.currentOrder = [];
+      document.getElementById('age-error').style.display = 'block';
+      document.getElementById('age-error').textContent = '❌ 순서가 틀렸습니다! 다시 시도하세요.';
+      document.querySelectorAll('.age-btn').forEach(function(btn) {
+        btn.style.background = 'rgba(255,255,255,0.08)'; btn.style.borderColor = 'rgba(255,255,255,0.2)';
+      });
+      updateAgeOrder();
+      document.getElementById('room1-puzzle1').style.animation = 'shake 0.3s';
+      setTimeout(function() { document.getElementById('room1-puzzle1').style.animation = ''; }, 300);
+    }
+  }
+}
+
+function updateAgeOrder() {
+  var el = document.getElementById('age-order');
+  if (room1Data.currentOrder.length === 0) { el.innerHTML = '선택 순서: '; return; }
+  el.innerHTML = '선택 순서: ' + room1Data.currentOrder.map(function(n, i) {
+    return '<span style="color:#4ecdc4;">' + (i+1) + '.</span>' + n;
+  }).join(' → ');
+}
+
+function showRoom1Puzzle2() {
+  document.getElementById('room1-puzzle1').style.display = 'none';
+  document.getElementById('room1-puzzle2').style.display = 'block';
+  document.getElementById('room1-status').textContent = '퍼즐 2/2: 비밀번호 입력';
+
+  var html = '<div class="fade-in">';
+  html += '<p style="font-size:14px;margin-bottom:8px;">🔒 문 잠금장치가 나타났다.</p>';
+  html += '<p style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:16px;">힌트: DX팀은 총 몇 명일까요?</p>';
+  html += '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">';
+  ['11','12','13','14','15'].forEach(function(opt) {
+    html += '<button onclick="checkPassword(\''+opt+'\')" style="padding:12px 20px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.3);border-radius:8px;color:#fff;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.2s;">'+opt+'명</button>';
+  });
+  html += '</div><p id="pw-error" style="font-size:12px;color:#e94560;display:none;"></p></div>';
+  document.getElementById('room1-puzzle2').innerHTML = html;
+}
+
+function checkPassword(answer) {
+  if (answer === '13') {
+    gameState.room1Clear = true;
+    document.getElementById('room1-puzzle2').innerHTML = '<div class="fade-in" style="text-align:center;"><p style="font-size:48px;margin-bottom:16px;">🔓</p><p style="font-size:18px;font-weight:bold;color:#00b894;">문이 열렸다!</p><p style="font-size:13px;color:rgba(255,255,255,0.7);margin:12px 0;">삐빕— [긴급] 서버 장애 발생<br>장교빌딩 서버실로 이동하세요.</p><button class="btn btn-secondary" onclick="startRoom2()">서버실로 이동 →</button></div>';
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-error').textContent = '❌ 틀렸습니다! 팀원 수를 다시 세어보세요.';
+    document.getElementById('room1-puzzle2').style.animation = 'shake 0.3s';
+    setTimeout(function() { document.getElementById('room1-puzzle2').style.animation = ''; }, 300);
+  }
+}
+
+// ========================================
+// 방 2: 장교빌딩 서버실
+// ========================================
+var room2WrongCount = 0;
+var room2Hints = [];
+
+function startRoom2() {
+  showScreen('screen-room2');
+  room2WrongCount = 0;
+  initRoom2Puzzle1();
+}
+
+function initRoom2Puzzle1() {
+  var container = document.getElementById('room2-puzzle1');
+  document.getElementById('room2-status').textContent = '⚠️ 퍼즐 1/2: 장애 원인 찾기';
+
+  var skillHint = '';
+  if (gameState.character.id === 'jeon') {
+    skillHint = '<div style="background:rgba(162,155,254,0.2);border:1px solid #a29bfe;border-radius:8px;padding:8px;margin-bottom:12px;font-size:11px;">💡 힌트: Dustin 관련 에러를 찾아보세요.</div>';
+  }
+
+  var html = skillHint;
+  html += '<p style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:12px;">서버 모니터에 에러 로그가 떠 있다.<br><b>장애의 원인</b>은 무엇일까?</p>';
+  html += '<div style="background:#0d1117;border-radius:8px;padding:12px;text-align:left;font-family:monospace;font-size:11px;line-height:1.8;margin-bottom:16px;">';
+  html += '<div style="color:#4ecdc4;">[INFO] System health check started...</div>';
+  html += '<div style="color:#ffd700;">[WARN] Memory usage: 94%</div>';
+  html += '<div style="color:#e94560;">[ERROR] Dustin build failed: module not found</div>';
+  html += '<div style="color:#4ecdc4;">[INFO] Last commit by 전세웅: "fix: 이번엔 진짜 됨"</div>';
+  html += '<div style="color:#e94560;">[FATAL] Dustin deploy crashed — 전체 서비스 중단</div>';
+  html += '</div>';
+  html += '<p style="font-size:13px;margin-bottom:12px;">장애의 원인은?</p>';
+  ['메모리 부족','Dustin 빌드 실패','네트워크 끊김','DB 연결 오류'].forEach(function(opt) {
+    html += '<button onclick="answerRoom2P1(\''+opt+'\')" style="display:block;width:100%;padding:11px;margin:6px 0;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:13px;cursor:pointer;text-align:left;transition:all 0.2s;">'+opt+'</button>';
+  });
+  html += '<p id="r2p1-error" style="margin-top:8px;font-size:12px;color:#e94560;display:none;"></p>';
+  container.innerHTML = html;
+}
+
+function answerRoom2P1(answer) {
+  if (answer === 'Dustin 빌드 실패') {
+    setTimeout(showRoom2Puzzle2, 400);
+  } else {
+    document.getElementById('r2p1-error').style.display = 'block';
+    document.getElementById('r2p1-error').textContent = '❌ 다시 로그를 잘 읽어보세요!';
+    document.getElementById('room2-puzzle1').style.animation = 'shake 0.3s';
+    setTimeout(function() { document.getElementById('room2-puzzle1').style.animation = ''; }, 300);
+  }
+}
+
+function showRoom2Puzzle2() {
+  document.getElementById('room2-puzzle1').style.display = 'none';
+  document.getElementById('room2-puzzle2').style.display = 'block';
+  document.getElementById('room2-status').textContent = '⚠️ 퍼즐 2/2: 복구 명령어 선택';
+
+  var html = '<div class="fade-in">';
+  html += '<p style="font-size:13px;margin-bottom:8px;">원인을 찾았다! Dustin 빌드가 실패했다.</p>';
+  html += '<p style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:16px;">서버를 복구하려면 어떤 명령어를 실행해야 할까?</p>';
+  html += '<div style="background:#0d1117;border-radius:8px;padding:12px;text-align:left;font-family:monospace;font-size:12px;margin-bottom:16px;color:#4ecdc4;">$ dustin _______<span style="animation:flicker 1s infinite;">▌</span></div>';
+  ['dustin delete','dustin rebuild','dustin rollback','dustin shutdown'].forEach(function(opt) {
+    html += '<button onclick="answerRoom2P2(\''+opt+'\')" style="display:block;width:100%;padding:11px;margin:6px 0;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:13px;cursor:pointer;text-align:left;font-family:monospace;transition:all 0.2s;">'+opt+'</button>';
+  });
+  html += '<p id="r2p2-error" style="margin-top:8px;font-size:12px;color:#e94560;display:none;"></p>';
+  html += '<p id="room2-hint" style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:8px;min-height:30px;"></p>';
+  html += '</div>';
+  document.getElementById('room2-puzzle2').innerHTML = html;
+}
+
+function answerRoom2P2(answer) {
+  if (answer === 'dustin rebuild') {
+    setTimeout(room2Clear, 400);
+  } else {
+    room2WrongCount++;
+    document.getElementById('r2p2-error').style.display = 'block';
+    document.getElementById('r2p2-error').textContent = '❌ 그 명령어로는 복구할 수 없습니다!';
+    if (room2WrongCount <= room2Hints.length) {
+      document.getElementById('room2-hint').textContent = room2Hints[room2WrongCount - 1];
+    }
+    document.getElementById('room2-puzzle2').style.animation = 'shake 0.3s';
+    setTimeout(function() { document.getElementById('room2-puzzle2').style.animation = ''; }, 300);
+  }
+}
+
+function room2Clear() {
+  gameState.room2Clear = true;
+  document.getElementById('room2-puzzle2').innerHTML = '<div class="fade-in" style="text-align:center;"><p style="font-size:48px;margin-bottom:16px;">✅</p><p style="font-size:18px;font-weight:bold;color:#00b894;">서버 복구 완료!</p><p style="font-size:13px;color:rgba(255,255,255,0.7);margin:12px 0;">시스템 복구 90% 완료.<br>마지막 인증키가 필요합니다.<br><br>위치: <b>롯데백화점 본점</b></p><button class="btn btn-success" onclick="startRoom3()">롯데백화점으로 이동 →</button></div>';
+}
+
+// ========================================
+// 방 3: 롯데백화점 본점
+// ========================================
+var room3Data = {
+  questions: [
+    { q:'DX팀에서 매년 나트랑으로 여행 가는 사람은?', a:'여승혁', opts:['문기준','여승혁','이정호','김재환'] },
+    { q:'전세중 수석님의 특기는?', a:'간식 먹기', opts:['코딩','간식 먹기','회의 진행','야근'] },
+    { q:'"내몸혁명" 콤비는 누구와 누구?', a:'홍병우 & 박종택', opts:['홍병우 & 박종택','전세중 & 이상현','전세웅 & 김재환','여승혁 & 문기준'] },
+    { q:'박예은 리더의 강아지 이름은?', a:'재인', opts:['초코','재인','뭉치','보리'] },
+    { q:'올해 DX팀에 처음 합류한 사람은?', a:'이정호', opts:['김하늘','이성현','이정호','문기준'] },
+    { q:'문기준 리더가 좋아하는 브랜드는?', a:'나이키', opts:['아디다스','나이키','뉴발란스','컨버스'] },
+    { q:'김재환 책임이 매주 가는 곳은?', a:'에버랜드', opts:['롯데월드','에버랜드','한강공원','이마트'] }
+  ],
+  currentQ: 0,
+  selectedQuestions: []
+};
+
+function startRoom3() {
+  showScreen('screen-room3');
+  var shuffled = room3Data.questions.slice();
+  for (var i = shuffled.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = t;
+  }
+  room3Data.selectedQuestions = shuffled.slice(0, 5);
+  room3Data.currentQ = 0;
+  showQuestion();
+}
+
+function showQuestion() {
+  var container = document.getElementById('room3-quiz');
+
+  if (room3Data.currentQ >= 5) {
+    gameState.room3Clear = true;
+    container.innerHTML = '<div class="fade-in" style="text-align:center;"><p style="font-size:48px;margin-bottom:16px;">🎉</p><p style="font-size:18px;font-weight:bold;color:#4ecdc4;">인증 완료!</p><p style="font-size:13px;color:rgba(255,255,255,0.7);margin:12px 0;">5문제 모두 통과!<br>마지막 문이 열린다...</p><button class="btn btn-success" onclick="startEnding()">문을 열다 →</button></div>';
+    return;
+  }
+
+  var q = room3Data.selectedQuestions[room3Data.currentQ];
+  var opts = q.opts.slice();
+  for (var i = opts.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+  }
+
+  var html = '<div class="fade-in">';
+  html += '<p style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;">문제 ' + (room3Data.currentQ + 1) + '/5</p>';
+  html += '<p style="font-size:15px;margin-bottom:16px;font-weight:bold;">' + q.q + '</p>';
+  opts.forEach(function(opt) {
+    html += '<button class="quiz-opt" onclick="answerQuiz(this,\'' + opt.replace(/'/g, "\\'") + '\')" style="display:block;width:100%;padding:12px;margin:6px 0;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-size:14px;cursor:pointer;text-align:left;transition:all 0.2s;">' + opt + '</button>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function answerQuiz(btnEl, answer) {
+  var q = room3Data.selectedQuestions[room3Data.currentQ];
+  document.querySelectorAll('.quiz-opt').forEach(function(btn) { btn.style.pointerEvents = 'none'; });
+
+  if (answer === q.a) {
+    btnEl.style.background = 'rgba(0,184,148,0.4)';
+    btnEl.style.borderColor = '#00b894';
+    btnEl.innerHTML = '✅ ' + answer;
+    room3Data.currentQ++;
+    setTimeout(showQuestion, 800);
+  } else {
+    btnEl.style.background = 'rgba(233,69,96,0.4)';
+    btnEl.style.borderColor = '#e94560';
+    btnEl.innerHTML = '❌ ' + answer;
+    setTimeout(function() {
+      document.getElementById('room3-quiz').innerHTML = '<div class="fade-in" style="text-align:center;"><p style="font-size:36px;margin-bottom:12px;">😢</p><p style="font-size:15px;color:#e94560;margin-bottom:8px;">틀렸습니다!</p><p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:16px;">다시 한번 생각해보세요!</p><button class="btn btn-secondary" onclick="showQuestion()">다시 시도</button></div>';
+    }, 1000);
+  }
+}
+
+// ========================================
+// 엔딩
+// ========================================
+var endings = {
+  hong: { title:'팀장의 무게', msg:'팀장님, 내몸혁명도 올해 DX팀도 항상 성공입니다.\n오늘도 고생하셨어요, 팀장님.' },
+  park: { title:'끈기의 사나이', msg:'종택님, 포기하지 않는 그 끈기가 팀의 원동력입니다.\n막내 하영이는 사라졌지만 그래도 새로운 인원이 곧 들어올테니 힘내보세요 ㅎㅎ' },
+  lee: { title:'말 한마디의 힘', msg:'상현님의 통화 한 통이 점포의 리더 한명을 살렸습니다.\n점에서는 통화를 끊을 수 없어 힘들어하지만, 그렇게 하나하나 알려주는게 쉬운게 아니예요.' },
+  jeon: { title:'더스틴 정복자', msg:'세웅님, 드디어 더스틴을 정복했습니다.\n매일 고통받았지만 포기하지 않은 당신이 진짜 영웅이에요.\n이제 더스틴 에러 없는 평화로운 하루가 올 거예요... 아마도.' }
+};
+
+var teamMembers = [
+  '홍병우 팀장','전세중 수석',
+  '김재환 책임','이상현 책임','전세웅 책임','박종택 책임',
+  '여승혁 리더','문기준 리더','정아름 리더','박예은 리더','이정호 리더','김하늘 리더','이성현 리더'
+];
+
+function startEnding() {
+  showScreen('screen-ending');
+  var content = document.getElementById('ending-content');
+  content.innerHTML = '';
+
+  var elapsed = Math.round((Date.now() - gameState.startTime) / 1000);
+  var min = Math.floor(elapsed / 60);
+  var sec = elapsed % 60;
+  var timeStr = min + '분 ' + sec + '초';
+  var ending = endings[gameState.character.id];
+
+  setTimeout(function() {
+    content.innerHTML = '<p style="font-size:14px;color:rgba(255,255,255,0.5);animation:fadeIn 2s;">문이 열렸다.</p>';
+  }, 500);
+
+  setTimeout(function() {
+    content.innerHTML += '<p style="font-size:14px;color:rgba(255,255,255,0.6);margin-top:20px;animation:fadeIn 2s;">그 안에는...</p>';
+  }, 2500);
+
+  setTimeout(function() {
+    content.innerHTML += '<p style="font-size:20px;color:#ffd700;margin-top:30px;font-weight:bold;animation:fadeIn 2s;">"혼자 고생했다고 생각했지?"</p>';
+  }, 4500);
+
+  setTimeout(function() {
+    content.innerHTML += '<p style="font-size:22px;color:#4ecdc4;margin-top:12px;font-weight:bold;animation:fadeIn 2s;">"우린 항상 같이야."</p>';
+  }, 6500);
+
+  setTimeout(function() {
+    content.innerHTML += '<div style="margin-top:30px;padding:20px;background:rgba(255,255,255,0.05);border-radius:12px;border:1px solid '+gameState.character.color+';animation:fadeIn 2s;"><p style="font-size:13px;color:'+gameState.character.color+';margin-bottom:8px;">[ '+ending.title+' ]</p><p style="font-size:14px;line-height:1.8;white-space:pre-line;">'+ending.msg+'</p></div>';
+  }, 8500);
+
+  setTimeout(function() {
+    var creditsHtml = '<div style="margin-top:30px;animation:fadeIn 2s;"><p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:12px;">— DX팀 일동 —</p><div id="credits-list" style="font-size:13px;line-height:2;color:rgba(255,255,255,0.7);"></div></div>';
+    content.innerHTML += creditsHtml;
+    var list = document.getElementById('credits-list');
+    teamMembers.forEach(function(name, idx) {
+      setTimeout(function() {
+        list.innerHTML += '<span style="display:inline-block;margin:2px 6px;animation:fadeIn 0.5s;">'+name+'</span>';
+      }, idx * 300);
+    });
+  }, 11000);
+
+  setTimeout(function() {
+    var rankings = saveRanking(gameState.nickname, gameState.character.name, elapsed);
+
+    var rankHtml = '<div style="margin-top:30px;animation:fadeIn 2s;">';
+    rankHtml += '<p style="font-size:14px;color:#ffd700;margin-bottom:4px;">⏱️ 클리어 시간: '+timeStr+'</p>';
+    rankHtml += '<p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px;">'+gameState.nickname+' ('+gameState.character.name+')</p>';
+    rankHtml += '<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left;">';
+    rankHtml += '<p style="font-size:14px;font-weight:bold;color:#ffd700;margin-bottom:12px;text-align:center;">🏆 랭킹 보드</p>';
+
+    rankings.slice(0, 10).forEach(function(r, i) {
+      var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1) + '.';
+      var isMe = (r.nickname === gameState.nickname && r.time === elapsed);
+      var hl = isMe ? 'background:rgba(255,215,0,0.15);border-radius:6px;' : '';
+      var m = Math.floor(r.time / 60);
+      var s = r.time % 60;
+      rankHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;'+hl+'">';
+      rankHtml += '<span style="font-size:13px;">'+medal+' <b>'+r.nickname+'</b> <span style="color:rgba(255,255,255,0.4);font-size:11px;">('+r.character+')</span></span>';
+      rankHtml += '<span style="font-size:12px;color:#4ecdc4;">'+m+'분 '+s+'초</span></div>';
+    });
+
+    rankHtml += '</div>';
+    rankHtml += '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button class="btn btn-secondary" onclick="location.reload()">다시 플레이</button></div>';
+    rankHtml += '</div>';
+    content.innerHTML += rankHtml;
+  }, 16000);
+}
+</script>
+</body>
+</html>
