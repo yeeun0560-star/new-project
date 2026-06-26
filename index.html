@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -56,7 +56,7 @@ body { background: #0a0a0f; color: #fff; }
 </div>
 
 <!-- 인트로 -->
-<div id="screen-intro" class="screen" style="background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.7)),url('images/갇힌 사진.jpg') center/cover;">
+<div id="screen-intro" class="screen" style="background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.7)),url('images/trapped.jpg') center/cover;">
   <div style="text-align:center; max-width:500px;">
     <p id="intro-text" style="font-size:16px; line-height:2; color:rgba(255,255,255,0.9);"></p>
     <button class="btn btn-secondary" id="btn-start-room1" style="margin-top:30px; display:none;" onclick="startRoom1()">6 회의실로 이동</button>
@@ -64,7 +64,7 @@ body { background: #0a0a0f; color: #fff; }
 </div>
 
 <!-- 방 1: 6 회의실 -->
-<div id="screen-room1" class="screen" style="background:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.5)),url('images/6회의실.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
+<div id="screen-room1" class="screen" style="background:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.5)),url('images/room1.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
   <div style="text-align:center; width:100%; max-width:500px;">
     <h2 style="margin-bottom:4px;">📍 6 회의실</h2>
     <p style="font-size:12px; color:#ffd700; margin-bottom:16px;" id="room1-status">퍼즐 1/2: 나이 순서 맞추기</p>
@@ -74,7 +74,7 @@ body { background: #0a0a0f; color: #fff; }
 </div>
 
 <!-- 방 2: 장교빌딩 서버실 -->
-<div id="screen-room2" class="screen" style="background:linear-gradient(rgba(20,0,0,0.45),rgba(10,0,0,0.55)),url('images/장교빌딩.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
+<div id="screen-room2" class="screen" style="background:linear-gradient(rgba(20,0,0,0.45),rgba(10,0,0,0.55)),url('images/room2.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
   <div style="text-align:center; width:100%; max-width:500px;">
     <h2 style="margin-bottom:4px;">📍 장교빌딩 서버실</h2>
     <p style="font-size:12px; color:#e94560; margin-bottom:16px; animation:pulse 2s infinite;" id="room2-status">⚠️ 시스템 장애 발생</p>
@@ -84,7 +84,7 @@ body { background: #0a0a0f; color: #fff; }
 </div>
 
 <!-- 방 3: 롯데백화점 본점 -->
-<div id="screen-room3" class="screen" style="background:linear-gradient(rgba(0,0,30,0.35),rgba(0,0,20,0.45)),url('images/롯데백화점.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
+<div id="screen-room3" class="screen" style="background:linear-gradient(rgba(0,0,30,0.35),rgba(0,0,20,0.45)),url('images/room3.jpg') center/cover; justify-content:flex-start; padding-top:40px;">
   <div style="text-align:center; width:100%; max-width:500px;">
     <h2 style="margin-bottom:4px;">📍 롯데백화점 본점</h2>
     <p style="font-size:12px; color:#4ecdc4; margin-bottom:16px;" id="room3-status">최종 인증 퀴즈</p>
@@ -113,10 +113,10 @@ var gameState = {
 };
 
 var characters = [
-  { id:'hong', name:'홍병우', title:'팀장', trait:'"내몸혁명" 다이어트 리더', img:'images/홍병우.jpg', color:'#e94560' },
-  { id:'park', name:'박종택', title:'책임', trait:'"내몸혁명" 파트너, 끈기의 아이콘', img:'images/박종택.jpg', color:'#ffd700' },
-  { id:'lee', name:'이상현', title:'책임', trait:'통화왕, 소통의 달인', img:'images/이상현.jpg', color:'#00cec9' },
-  { id:'jeon', name:'전세웅', title:'책임', trait:'더스틴에 고통받는 기획자', img:'images/전세웅.jpg', color:'#a29bfe' }
+  { id:'hong', name:'홍병우', title:'팀장', trait:'"내몸혁명" 다이어트 리더', img:'images/hong.jpg', color:'#e94560' },
+  { id:'park', name:'박종택', title:'책임', trait:'"내몸혁명" 파트너, 끈기의 아이콘', img:'images/park.jpg', color:'#ffd700' },
+  { id:'lee', name:'이상현', title:'책임', trait:'통화왕, 소통의 달인', img:'images/lee.jpg', color:'#00cec9' },
+  { id:'jeon', name:'전세웅', title:'책임', trait:'더스틴에 고통받는 기획자', img:'images/jeon.jpg', color:'#a29bfe' }
 ];
 
 // ========================================
